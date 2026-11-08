@@ -56,14 +56,15 @@ graph TB
     getCal -->|reads| logs3[logs.json]
     getCal -->|reads| a4[activities.json]
     postUser -->|writes| user1[user.json]
-    stats -->|reads| requests[REQUESTS]
+    stats -->|reads| singleton[Requests Singleton]
     targets -->|reads| user2[user.json]
     targets -->|reads| logs4[logs.json]
     targets -->|reads| a5[activities.json]
     targets --> bands[LIFESTYLE_ACTIVITY]
     bands --> names[ACTIVITY_FOR_API]
     names -->|calls| macros[Macros API]
-    Handlers -->|each call updates| requests
+    Handlers -->|decorated with| decorator[request_log decorator]
+    decorator -->|updates| singleton
 ```
 
 ## What it does
