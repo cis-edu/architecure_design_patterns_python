@@ -20,50 +20,53 @@ Together, this is a small activity log that connects what you did with what you 
 
 This is the as-is picture. Update it when a refactor moves a responsibility out of `app.py`.
 
+
 ```mermaid
-graph TB
+flowchart TB
     client[HTTP client]
 
-    subgraph Handlers
-        getAct[GET activities]
-        postAct[POST activities]
-        postLog[POST log]
-        undo[POST undo]
-        getNotes[GET notices]
-        getCal[GET calories]
-        postUser[POST user]
-        stats[GET stats]
-        targets[GET targets]
-    end
+    client --> get_activities["GET /activities"]
+    client --> post_activities["POST /activities"]
+    client --> post_log["POST /log"]
+    client --> undo["POST /log/undo"]
+    client --> get_notices["GET /notices"]
+    client --> get_calories["GET /calories"]
+    client --> post_user["POST /user"]
+    client --> stats["GET /stats"]
+    client --> targets["GET /targets"]
 
-    client --> Handlers
-    getAct ~~~ postAct
-    postAct ~~~ postLog
-    postLog ~~~ undo
-    undo ~~~ getNotes
-    getNotes ~~~ getCal
-    getCal ~~~ postUser
-    postUser ~~~ stats
-    stats ~~~ targets
+    get_activities --> activities[(activities.json)]
+    post_activities --> activities
 
-    getAct -->|reads| a1[activities.json]
-    postAct -->|writes| a2[activities.json]
-    postLog -->|reads| a3[activities.json]
-    postLog -->|writes| logs1[logs.json]
-    postLog -->|writes| notes1[notices.json]
-    undo -->|writes| logs2[logs.json]
-    getNotes -->|reads| notes2[notices.json]
-    getCal -->|reads| logs3[logs.json]
-    getCal -->|reads| a4[activities.json]
-    postUser -->|writes| user1[user.json]
-    stats -->|reads| requests[REQUESTS]
-    targets -->|reads| user2[user.json]
-    targets -->|reads| logs4[logs.json]
-    targets -->|reads| a5[activities.json]
-    targets --> bands[LIFESTYLE_ACTIVITY]
-    bands --> names[ACTIVITY_FOR_API]
-    names -->|calls| macros[Macros API]
-    Handlers -->|each call updates| requests
+    post_log --> activities
+    post_log --> logs[(logs.json)]
+    post_log --> notices[(notices.json)]
+
+    undo --> logs
+    get_notices --> notices
+
+    get_calories --> logs
+    get_calories --> activities
+
+    post_user --> user[(user.json)]
+
+    targets --> user
+    targets --> logs
+    targets --> activities
+    targets --> lifestyle[LIFESTYLE_ACTIVITY]
+    lifestyle --> api_names[ACTIVITY_FOR_API]
+    api_names --> macros[macros API]
+
+    timing[timing block + REQUESTS]
+    timing -.-> get_activities
+    timing -.-> post_activities
+    timing -.-> post_log
+    timing -.-> undo
+    timing -.-> get_notices
+    timing -.-> get_calories
+    timing -.-> post_user
+    timing -.-> stats
+    timing -.-> targets
 ```
 
 ## What it does
