@@ -18,52 +18,22 @@ Together, this is a small activity log that connects what you did with what you 
 
 ## Current architecture
 
-This is the as-is picture. Update it when a refactor moves a responsibility out of `app.py`.
+This diagram shows how request logging and request statistics are handled using the Decorator and Singleton patterns
 
 ```mermaid
-graph TB
-    client[HTTP client]
+flowchart TB
+    client[HTTP client] --> wrapper["request_log decorator"]
+    wrapper --> counter["Requests Singleton"]
 
-    subgraph Handlers
-        getAct[GET activities]
-        postAct[POST activities]
-        postLog[POST log]
-        undo[POST undo]
-        getNotes[GET notices]
-        getCal[GET calories]
-        postUser[POST user]
-        stats[GET stats]
-        targets[GET targets]
-    end
+    wrapper --> stats[GET /stats]
+    stats --> counter
 
-    client --> Handlers
-    getAct ~~~ postAct
-    postAct ~~~ postLog
-    postLog ~~~ undo
-    undo ~~~ getNotes
-    getNotes ~~~ getCal
-    getCal ~~~ postUser
-    postUser ~~~ stats
-    stats ~~~ targets
-
-    getAct -->|reads| a1[activities.json]
-    postAct -->|writes| a2[activities.json]
-    postLog -->|reads| a3[activities.json]
-    postLog -->|writes| logs1[logs.json]
-    postLog -->|writes| notes1[notices.json]
-    undo -->|writes| logs2[logs.json]
-    getNotes -->|reads| notes2[notices.json]
-    getCal -->|reads| logs3[logs.json]
-    getCal -->|reads| a4[activities.json]
-    postUser -->|writes| user1[user.json]
-    stats -->|reads| requests[REQUESTS]
-    targets -->|reads| user2[user.json]
-    targets -->|reads| logs4[logs.json]
-    targets -->|reads| a5[activities.json]
-    targets --> bands[LIFESTYLE_ACTIVITY]
-    bands --> names[ACTIVITY_FOR_API]
-    names -->|calls| macros[Macros API]
-    Handlers -->|each call updates| requests
+    wrapper --> targets[GET /targets]
+    targets --> logs[(logs.json)]
+    targets --> user[(user.json)]
+    targets --> LIFESTYLE_ACTIVITY
+    LIFESTYLE_ACTIVITY --> ACTIVITY_FOR_API
+    ACTIVITY_FOR_API --> macros[macros API]
 ```
 
 ## What it does
