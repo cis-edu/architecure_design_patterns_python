@@ -36,7 +36,8 @@ graph TB
         targets[GET targets]
     end
 
-    client --> Handlers
+    client --> requestLogger[request_log decorator]
+    requestLogger --> Handlers
     getAct ~~~ postAct
     postAct ~~~ postLog
     postLog ~~~ undo
@@ -56,15 +57,22 @@ graph TB
     getCal -->|reads| logs3[logs.json]
     getCal -->|reads| a4[activities.json]
     postUser -->|writes| user1[user.json]
-    stats -->|reads| requests[REQUESTS]
+    stats -->|reads| requests[Requests singleton]
     targets -->|reads| user2[user.json]
     targets -->|reads| logs4[logs.json]
     targets -->|reads| a5[activities.json]
     targets --> bands[LIFESTYLE_ACTIVITY]
     bands --> names[ACTIVITY_FOR_API]
     names -->|calls| macros[Macros API]
-    Handlers -->|each call updates| requests
+    requestLogger -->|updates| requests[Requests singleton]
 ```
+
+Every API handler is wrapped by `request_log` from
+`decorators/request_log.py`. The decorator records request count and path in the
+`Requests` singleton before calling the handler, then records elapsed time even
+if the handler raises an exception. `GET /stats` reads the same singleton; its
+`last_seconds` value reflects the previous request because the current request
+is timed after the handler returns.
 
 ## What it does
 
@@ -92,7 +100,9 @@ Use Python 3.9 or newer. Run these commands from the project root. The JSON path
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python app.py
+py -3.15 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe app.py
 ```
 
 `requirements.txt` installs Flask, which runs the app, and Ruff, which checks and formats the Python files. The app listens on `http://127.0.0.1:5000`. On macOS, port 5000 is sometimes taken by AirPlay. If startup fails, change the port at the bottom of `app.py`.
